@@ -1,12 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "out" # Ensure it's the correct folder where your built app will reside
-  functions = "netlify/functions" # Edge functions should be placed here
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[[redirects]]
-  from = "/_next/*"
-  to = "/.netlify/next/*"
-  status = 200
