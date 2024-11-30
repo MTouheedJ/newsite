@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 
+//npm i
 // Define the Trade interface
 interface Trade {
   id: number | null;
