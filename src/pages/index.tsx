@@ -1,9 +1,9 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import axios from "axios";
+import { useState, useEffect } from "react";
 import StrategyTable from "../components/StrategyTable";
 import TradeTable from "../components/TradeTable";
-import { useState, useEffect } from "react";
 
 type Trade = {
   id: number;
@@ -25,7 +25,6 @@ type Strategy = {
 };
 
 const Home = ({ initialTrades }: { initialTrades: Trade[] }) => {
-  const [trades, setTrades] = useState(initialTrades);
   const [groupedTrades, setGroupedTrades] = useState<Record<string, Trade[]>>({});
   const [filters, setFilters] = useState({
     date: "",
@@ -60,27 +59,28 @@ const Home = ({ initialTrades }: { initialTrades: Trade[] }) => {
 
   // Apply filters and group trades dynamically
   useEffect(() => {
-    const filteredTrades = trades.filter((trade) => {
-      const dateMatch = filters.date ? trade.date_of_trade === filters.date : true;
-      const strategyMatch = filters.strategy
-        ? strategies.find((s) => s.name === filters.strategy)?.id === trade.strategy_id
-        : true;
-      const tickerMatch = filters.ticker ? trade.ticker.includes(filters.ticker) : true;
-      return dateMatch && strategyMatch && tickerMatch;
-    });
+    const applyFilters = () => {
+      const filtered = initialTrades.filter((trade) => {
+        const dateMatch = filters.date ? trade.date_of_trade === filters.date : true;
+        const strategyMatch = filters.strategy
+          ? strategies.find((s) => s.name === filters.strategy)?.id === trade.strategy_id
+          : true;
+        const tickerMatch = filters.ticker ? trade.ticker.includes(filters.ticker) : true;
+        return dateMatch && strategyMatch && tickerMatch;
+      });
 
-    const grouped = filteredTrades.reduce((acc, trade) => {
-      const groupKey = `${trade.date_of_trade}-${trade.strategy_id}-${trade.ticker}-${trade.time_horizon}`;
-      if (!acc[groupKey]) acc[groupKey] = [];
-      acc[groupKey].push(trade);
-      return acc;
-    }, {} as Record<string, Trade[]>);
+      const grouped = filtered.reduce((acc, trade) => {
+        const groupKey = `${trade.date_of_trade}-${trade.strategy_id}-${trade.ticker}-${trade.time_horizon}`;
+        if (!acc[groupKey]) acc[groupKey] = [];
+        acc[groupKey].push(trade);
+        return acc;
+      }, {} as Record<string, Trade[]>);
 
-    setGroupedTrades(grouped);
+      setGroupedTrades(grouped);
+    };
 
-    // Set the filtered trades in case it's needed elsewhere
-    setTrades(filteredTrades);
-  }, [filters, strategies]);
+    applyFilters();
+  }, [filters, initialTrades, strategies]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -142,6 +142,7 @@ const Home = ({ initialTrades }: { initialTrades: Trade[] }) => {
 
         {/* Display Grouped Trades */}
         <div>
+          <h1>Grouped Trades</h1>
           <table>
             <thead>
               <tr>

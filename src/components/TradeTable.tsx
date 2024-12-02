@@ -30,7 +30,7 @@ const TradeTable: React.FC = () => {
   const [selectedTrades, setSelectedTrades] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL; // Fetch from environment variables
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
     const fetchTradesAndStrategies = async () => {
@@ -131,8 +131,14 @@ const TradeTable: React.FC = () => {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div>
-      <table>
+    <div style={{ overflowX: "auto", marginBottom: "20px" }}>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #ddd",
+        }}
+      >
         <thead>
           <tr>
             <th>Select</th>
@@ -158,6 +164,7 @@ const TradeTable: React.FC = () => {
               key={trade.id}
               style={{
                 backgroundColor: trade.matched_trade_ids ? "lightgreen" : "",
+                borderBottom: "1px solid #ddd",
               }}
             >
               <td>
@@ -176,8 +183,8 @@ const TradeTable: React.FC = () => {
               <td>{trade.units}</td>
               <td>{trade.qty}</td>
               <td>{trade.current_price.toFixed(2)}</td>
-              <td style={{ fontWeight: trade.pnl ? "bold" : "normal" }}>{trade.pnl?.toFixed(2)}</td>
-              <td style={{ fontStyle: "italic" }}>{trade.unrealised_pnl?.toFixed(2) || "N/A"}</td>
+              <td>{trade.pnl?.toFixed(2)}</td>
+              <td>{trade.unrealised_pnl?.toFixed(2) || "N/A"}</td>
               <td>{trade.open_qty}</td>
               <td>{trade.matched_trade_ids || "N/A"}</td>
               <td>
