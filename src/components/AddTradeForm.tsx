@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-//npm i
 // Define the Trade interface
 interface Trade {
   id: number | null;
@@ -38,8 +37,7 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
   // Initial state for the trade form
   const [trade, setTrade] = useState<Trade>({
     id: tradeToUpdate?.id || null,
-    date_of_trade:
-      tradeToUpdate?.date_of_trade || new Date().toISOString().split("T")[0],
+    date_of_trade: tradeToUpdate?.date_of_trade || new Date().toISOString().split("T")[0],
     ticker: tradeToUpdate?.ticker || "",
     strategy_id: tradeToUpdate?.strategy_id || 0,
     time_horizon: tradeToUpdate?.time_horizon || "Short",
@@ -53,7 +51,7 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
     if (onCancel) {
       onCancel();
     } else {
-      router.push("/"); // Redirect to home page
+      router.push("/home"); // Redirect to home page
     }
   };
 
@@ -62,24 +60,20 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
     const fetchStrategies = async () => {
       try {
         if (!backendUrl) {
-          throw new Error(
-            "NEXT_PUBLIC_BACKEND_URL is not set in the environment variables."
-          );
+          throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
         }
 
-        const { data } = await axios.get<Strategy[]>(
-          `${backendUrl}/strategies/`
-        );
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token found");
+
+        const { data } = await axios.get<Strategy[]>(`${backendUrl}/strategies/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setStrategies(data);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          console.error(
-            "Error fetching strategies:",
-            error.response?.data || error.message
-          );
-          alert(
-            "Failed to load strategies. Please check your connection or server."
-          );
+          console.error("Error fetching strategies:", error.response?.data || error.message);
+          alert("Failed to load strategies. Please check your connection or server.");
         } else {
           console.error("Unknown error:", error);
           alert("An unknown error occurred while fetching strategies.");
@@ -94,10 +88,11 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
     e.preventDefault();
     try {
       if (!backendUrl) {
-        throw new Error(
-          "NEXT_PUBLIC_BACKEND_URL is not set in the environment variables."
-        );
+        throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
       }
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
 
       const payload = {
         ...trade,
@@ -107,10 +102,14 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
       };
 
       if (trade.id) {
-        await axios.put(`${backendUrl}/trades/${trade.id}`, payload);
+        await axios.put(`${backendUrl}/trades/${trade.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         alert("Trade updated successfully!");
       } else {
-        await axios.post(`${backendUrl}/trades/`, payload);
+        await axios.post(`${backendUrl}/trades/`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         alert("Trade added successfully!");
       }
 
@@ -128,20 +127,11 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
         units: 0,
       });
 
-      router.push("/");
+      router.push("/home");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        console.error(
-          "Submission Error:",
-          error.response?.data || error.message
-        );
-        alert(
-          `Error: ${
-            error.response?.data?.detail ||
-            error.response?.data?.message ||
-            "Unknown error"
-          }`
-        );
+        console.error("Submission Error:", error.response?.data || error.message);
+        alert(`Error: ${error.response?.data?.detail || error.response?.data?.message || "Unknown error"}`);
       } else {
         console.error("Unknown error:", error);
         alert("An unknown error occurred during submission.");
@@ -150,9 +140,7 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
   };
 
   // Handle input changes
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setTrade({ ...trade, [e.target.name]: e.target.value });
   };
 
@@ -246,17 +234,11 @@ const AddTradeForm: React.FC<AddTradeFormProps> = ({
         </div>
 
         <div className="form-group button-group">
-          <button type="submit">
-            {trade.id ? "Update Trade" : "Add Trade"}
-          </button>
+          <button type="submit">{trade.id ? "Update Trade" : "Add Trade"}</button>
           <button
             type="button"
             onClick={handleCancel}
-            style={{
-              marginLeft: "10px",
-              backgroundColor: "#dc3545",
-              color: "white",
-            }}
+            style={{ marginLeft: "10px", backgroundColor: "#dc3545", color: "white" }}
           >
             Cancel
           </button>

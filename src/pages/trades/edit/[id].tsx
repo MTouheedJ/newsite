@@ -45,17 +45,19 @@ const EditTradePage: React.FC = () => {
   });
   const [strategies, setStrategies] = useState<Strategy[]>([]);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL; // Fetch backend URL dynamically
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   // Fetch the trade details
   useEffect(() => {
     const fetchTrade = async () => {
       try {
-        if (!backendUrl) {
-          throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
-        }
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token found");
+        if (!backendUrl) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
 
-        const { data } = await axios.get<Trade>(`${backendUrl}/trades/${id}`);
+        const { data } = await axios.get<Trade>(`${backendUrl}/trades/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setTrade(data);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -76,11 +78,13 @@ const EditTradePage: React.FC = () => {
   useEffect(() => {
     const fetchStrategies = async () => {
       try {
-        if (!backendUrl) {
-          throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
-        }
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token found");
+        if (!backendUrl) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
 
-        const { data } = await axios.get<Strategy[]>(`${backendUrl}/strategies/`);
+        const { data } = await axios.get<Strategy[]>(`${backendUrl}/strategies/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setStrategies(data);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -105,9 +109,9 @@ const EditTradePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!backendUrl) {
-        throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
-      }
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+      if (!backendUrl) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
 
       const payload = {
         ...trade,
@@ -120,9 +124,11 @@ const EditTradePage: React.FC = () => {
         open_qty: parseFloat(trade.open_qty.toString()),
       };
 
-      await axios.put(`${backendUrl}/trades/${id}`, payload);
+      await axios.put(`${backendUrl}/trades/${id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       alert("Trade updated successfully!");
-      router.push("/trades");
+      router.push("/home");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.error("Error updating trade:", error.response?.data || error.message);

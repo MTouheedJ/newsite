@@ -1,7 +1,22 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
+module.exports = {
+  async redirects() {
+    return [
+      {
+        source: "/",
+        has: [
+          {
+            type: "cookie",
+            key: "token",
+          },
+        ],
+        destination: "/home",
+        permanent: false,
+      },
+      {
+        source: "/",
+        destination: "/login",
+        permanent: false,
+      },
+    ];
+  },
 };
-
-export default nextConfig;

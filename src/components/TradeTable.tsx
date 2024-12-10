@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import Link from "next/link";
 
@@ -19,47 +19,14 @@ type Trade = {
   realised_pnl?: number;
 };
 
-type Strategy = {
-  id: number;
-  name: string;
-};
+interface TradeTableProps {
+  trades: Trade[];
+  fetchTrades: () => void; // Function to refresh trades in the parent component
+}
 
-const TradeTable: React.FC = () => {
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [strategies, setStrategies] = useState<Strategy[]>([]);
+const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades }) => {
   const [selectedTrades, setSelectedTrades] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-  useEffect(() => {
-    const fetchTradesAndStrategies = async () => {
-      try {
-        setLoading(true);
-        if (!backendUrl) {
-          throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
-        }
-
-        // Fetch Trades
-        const tradeResponse = await axios.get(`${backendUrl}/trades/`);
-        setTrades(tradeResponse.data);
-
-        // Fetch Strategies
-        const strategyResponse = await axios.get(`${backendUrl}/strategies/`);
-        setStrategies(strategyResponse.data);
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          console.error("Error fetching data:", error.response?.data || error.message);
-        } else {
-          console.error("Unknown error:", error);
-        }
-        alert("Failed to fetch data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTradesAndStrategies();
-  }, [backendUrl]);
 
   const handleCheckboxChange = (tradeId: number) => {
     if (selectedTrades.includes(tradeId)) {
@@ -83,21 +50,13 @@ const TradeTable: React.FC = () => {
       }
 
       const payload = { trade_ids: selectedTrades };
-      const { data } = await axios.post(`${backendUrl}/trades/compare`, payload);
+      await axios.post(`${backendUrl}/trades/compare`, payload);
 
-      const updatedTrades = trades.map((trade) =>
-        data.updated_trades.find((updatedTrade: Trade) => updatedTrade.id === trade.id) || trade
-      );
-      setTrades(updatedTrades);
       alert("Comparison Successful!");
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.error("Error comparing trades:", error.response?.data || error.message);
-        alert("Failed to compare trades. Please check your connection or server.");
-      } else {
-        console.error("Unknown error:", error);
-        alert("An unknown error occurred while comparing trades.");
-      }
+      await fetchTrades(); // Refresh trades after comparison
+    } catch (error) {
+      console.error("Error comparing trades:", error);
+      alert("Failed to compare trades.");
     }
   };
 
@@ -110,35 +69,17 @@ const TradeTable: React.FC = () => {
       }
 
       await axios.delete(`${backendUrl}/trades/${tradeId}`);
-      setTrades(trades.filter((trade) => trade.id !== tradeId));
       alert("Trade deleted successfully!");
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.error("Error deleting trade:", error.response?.data || error.message);
-        alert("Failed to delete trade. Please check your connection or server.");
-      } else {
-        console.error("Unknown error:", error);
-        alert("An unknown error occurred while deleting the trade.");
-      }
+      await fetchTrades(); // Refresh trades after deletion
+    } catch (error) {
+      console.error("Error deleting trade:", error);
+      alert("Failed to delete trade.");
     }
   };
 
-  const getStrategyName = (strategyId: number): string => {
-    const strategy = strategies.find((s) => s.id === strategyId);
-    return strategy ? strategy.name : "N/A";
-  };
-
-  if (loading) return <p>Loading...</p>;
-
   return (
     <div style={{ overflowX: "auto", marginBottom: "20px" }}>
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          border: "1px solid #ddd",
-        }}
-      >
+      <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #ddd", fontSize: "15px" }}>
         <thead>
           <tr>
             <th>Select</th>
@@ -148,7 +89,6 @@ const TradeTable: React.FC = () => {
             <th>Strategy</th>
             <th>Time Horizon</th>
             <th>Price</th>
-            <th>Units</th>
             <th>Qty</th>
             <th>Current Price</th>
             <th>PNL</th>
@@ -172,15 +112,18 @@ const TradeTable: React.FC = () => {
                   type="checkbox"
                   checked={selectedTrades.includes(trade.id)}
                   onChange={() => handleCheckboxChange(trade.id)}
+                  disabled={trade.open_qty === 0}
+                  style={{
+                    cursor: trade.open_qty === 0 ? "not-allowed" : "pointer",
+                  }}
                 />
               </td>
               <td>{trade.id}</td>
               <td>{trade.date_of_trade}</td>
               <td>{trade.ticker}</td>
-              <td>{getStrategyName(trade.strategy_id)}</td>
+              <td>{trade.strategy_id}</td>
               <td>{trade.time_horizon}</td>
               <td>{trade.price.toFixed(2)}</td>
-              <td>{trade.units}</td>
               <td>{trade.qty}</td>
               <td>{trade.current_price.toFixed(2)}</td>
               <td>{trade.pnl?.toFixed(2)}</td>

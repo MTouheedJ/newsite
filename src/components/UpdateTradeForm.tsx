@@ -20,6 +20,9 @@ const UpdateTradeForm: React.FC<UpdateTradeFormProps> = ({ tradeToUpdate, onForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+
       const payload = {
         current_price: parseFloat(trade.current_price.toString()),
         open_qty: parseFloat(trade.open_qty.toString()),
@@ -27,14 +30,20 @@ const UpdateTradeForm: React.FC<UpdateTradeFormProps> = ({ tradeToUpdate, onForm
         pnl: trade.pnl ? parseFloat(trade.pnl.toString()) : null,
       };
 
-      await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/trades/${trade.id}`, payload);
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/trades/${trade.id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       alert("Trade updated successfully!");
 
       onFormSubmit(); // Callback for parent refresh
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.error("Error updating trade:", error.response?.data || error.message);
-        alert("An error occurred while updating the trade. Please check your data and try again.");
+        alert(`Error: ${error.response?.data?.detail || error.response?.data?.message || "Failed to update trade."}`);
       } else {
         console.error("Unknown error:", error);
         alert("An unknown error occurred. Please try again.");

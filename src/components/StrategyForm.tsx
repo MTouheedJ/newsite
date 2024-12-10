@@ -1,24 +1,38 @@
 import { useState } from "react";
 import axios from "axios";
-import { useRouter } from "next/router"; // Import useRouter from Next.js
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
 
 const StrategyForm = () => {
-  const [name, setName] = useState(""); // State for strategy name
-  const router = useRouter(); // Initialize useRouter
+  const [name, setName] = useState("");
+  const { authToken, user } = useAuth(); // Access the user and token
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!authToken || !user?.user_id) {
+      alert("User is not authenticated.");
+      return;
+    }
+
     if (name) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL; // Fetch from environment variables
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
         if (!backendUrl) {
           throw new Error("NEXT_PUBLIC_BACKEND_URL is not set in the environment variables.");
         }
 
-        await axios.post(`${backendUrl}/strategies/`, { name }); // Corrected URL handling
+        await axios.post(
+          `${backendUrl}/strategies/`,
+          { name, user_id: user.user_id }, // Include user_id
+          {
+            headers: { Authorization: `Bearer ${authToken}` }, // Include token in headers
+          }
+        );
+
         setName("");
         alert("Strategy added successfully!");
-        router.push("/"); // Redirect to the home page
+        router.push("/home");
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           console.error("Error adding strategy:", error.response?.data || error.message);
