@@ -37,6 +37,7 @@ const Home = () => {
   });
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [buttonLoading, setButtonLoading] = useState(false); // Loader state for the button
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
 
@@ -68,8 +69,9 @@ const Home = () => {
     }
   };
 
-  // Update trades
+  // Update trades with loader
   const updateTrades = async () => {
+    setButtonLoading(true); // Show loader
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
@@ -84,6 +86,8 @@ const Home = () => {
     } catch (error) {
       console.error("[Home] Error updating trades:", error);
       alert("Failed to update trades.");
+    } finally {
+      setButtonLoading(false); // Hide loader
     }
   };
 
@@ -165,29 +169,22 @@ const Home = () => {
             onClick={updateTrades}
             style={{
               padding: "8px 16px",
-              backgroundColor: "transparent",
-              color: "#007BFF",
+              backgroundColor: buttonLoading ? "#d3d3d3" : "transparent",
+              color: buttonLoading ? "#ffffff" : "#007BFF",
               border: "1px solid #007BFF",
               borderRadius: "4px",
-              cursor: "pointer",
+              cursor: buttonLoading ? "not-allowed" : "pointer",
               fontWeight: "bold",
               fontSize: "12px",
               transition: "background-color 0.3s, color 0.3s",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#007BFF";
-              e.currentTarget.style.color = "white";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "#007BFF";
-            }}
+            disabled={buttonLoading}
           >
-            Update Trade Current Prices & Un-realized PNL
+            {buttonLoading ? "Updating..." : "Update Trade Current Prices & Un-realized PNL"}
           </button>
         </div>
 
-        <TradeTable trades={trades} fetchTrades={fetchTrades} />
+        <TradeTable trades={trades} fetchTrades={fetchTrades} strategies={strategies} />
 
         <div style={{ marginBottom: "20px", padding: "10px" }}>
           <h1>Filter Grouped Trades</h1>

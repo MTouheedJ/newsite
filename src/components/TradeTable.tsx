@@ -19,12 +19,18 @@ type Trade = {
   realised_pnl?: number;
 };
 
+type Strategy = {
+  id: number;
+  name: string;
+};
+
 interface TradeTableProps {
   trades: Trade[];
   fetchTrades: () => void; // Function to refresh trades in the parent component
+  strategies: Strategy[]; // List of strategies to map strategy_id to name
 }
 
-const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades }) => {
+const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades, strategies }) => {
   const [selectedTrades, setSelectedTrades] = useState<number[]>([]);
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -53,6 +59,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades }) => {
       await axios.post(`${backendUrl}/trades/compare`, payload);
 
       alert("Comparison Successful!");
+      setSelectedTrades([]); // Unselect all checkboxes after comparison
       await fetchTrades(); // Refresh trades after comparison
     } catch (error) {
       console.error("Error comparing trades:", error);
@@ -75,6 +82,11 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades }) => {
       console.error("Error deleting trade:", error);
       alert("Failed to delete trade.");
     }
+  };
+
+  const getStrategyName = (strategyId: number): string => {
+    if (!strategies || strategies.length === 0) return "Unknown"; // Add a fallback check
+    return strategies.find((strategy) => strategy.id === strategyId)?.name || "Unknown";
   };
 
   return (
@@ -121,7 +133,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades }) => {
               <td>{trade.id}</td>
               <td>{trade.date_of_trade}</td>
               <td>{trade.ticker}</td>
-              <td>{trade.strategy_id}</td>
+              <td>{getStrategyName(trade.strategy_id)}</td>
               <td>{trade.time_horizon}</td>
               <td>{trade.price.toFixed(2)}</td>
               <td>{trade.qty}</td>
