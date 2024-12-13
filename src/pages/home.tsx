@@ -74,22 +74,42 @@ const Home = () => {
     setButtonLoading(true); // Show loader
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
-
+      if (!token) throw new Error("No token found. Please log in again.");
+  
+      if (!backendUrl) {
+        throw new Error("Backend URL is not set in environment variables.");
+      }
+  
+      console.log("Sending request to update trades...");
+  
       const response = await axios.put(
         `${backendUrl}/trades/update_prices`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(response.data.message);
-      await fetchTrades();
+  
+      alert(response.data.message || "Trades updated successfully!");
+      await fetchTrades(); // Refresh trades after update
     } catch (error) {
-      console.error("[Home] Error updating trades:", error);
-      alert("Failed to update trades.");
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error updating trades:", error.response?.data || error.message);
+  
+        if (error.response?.status === 401) {
+          alert("Unauthorized access. Please log in again.");
+          router.replace("/login");
+        } else if (error.response?.status === 500) {
+          alert("Server error occurred. Please try again later.");
+        } else {
+          alert("Failed to update trades. Please check your connection.");
+        }
+      } else {
+        console.error("Unexpected error:", error);
+        alert("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setButtonLoading(false); // Hide loader
     }
-  };
+  };  
 
   // Fetch strategies
   const fetchStrategies = async () => {
@@ -189,13 +209,20 @@ const Home = () => {
         <div style={{ marginBottom: "20px", padding: "10px" }}>
           <h1>Filter Grouped Trades</h1>
           <input
-            type="date"
-            name="date"
-            value={filters.date}
-            onChange={handleFilterChange}
-            placeholder="Filter by Date"
-            style={{ marginRight: "10px", padding: "5px" }}
-          />
+              type="date"
+              name="date"
+              value={filters.date}
+              onChange={handleFilterChange}
+              placeholder="Filter by Date"
+              style={{
+                marginRight: "10px",
+                padding: "5px",
+                cursor: "pointer", // Ensure it looks interactive
+                appearance: "none", // Allow better cross-browser compatibility
+              }}
+              onFocus={(e) => (e.target.type = "date")} // Ensure the type is correctly handled
+              onBlur={(e) => (e.target.type = "text")} // Fallback for non-supported browsers
+            />
           <select
             name="strategy"
             value={filters.strategy}

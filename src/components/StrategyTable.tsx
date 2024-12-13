@@ -54,16 +54,16 @@ const StrategyTable: FC<StrategyTableProps> = ({ strategies, fetchStrategies }) 
       <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
         <thead>
           <tr>
-            <th style={{ borderBottom: "1px solid #ccc", padding: "8px" }}>ID</th>
+            <th style={{ borderBottom: "1px solid #ccc", padding: "8px" }}>#</th>
             <th style={{ borderBottom: "1px solid #ccc", padding: "8px" }}>Name</th>
             <th style={{ borderBottom: "1px solid #ccc", padding: "8px" }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {strategies.length > 0 ? (
-            strategies.map((strategy) => (
+            strategies.map((strategy, index) => (
               <tr key={strategy.id}>
-                <td style={{ borderBottom: "1px solid #eee", padding: "8px" }}>{strategy.id}</td>
+                <td style={{ borderBottom: "1px solid #eee", padding: "8px" }}>{index + 1}</td>
                 <td style={{ borderBottom: "1px solid #eee", padding: "8px" }}>{strategy.name}</td>
                 <td style={{ borderBottom: "1px solid #eee", padding: "8px" }}>
                   <button

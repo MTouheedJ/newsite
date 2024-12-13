@@ -142,7 +142,7 @@ const EditTradePage: React.FC = () => {
 
   // Handle cancel action
   const handleCancel = () => {
-    router.push("/trades");
+    router.push("/home");
   };
 
   if (!trade) return <p>Loading...</p>;
@@ -198,6 +198,20 @@ const EditTradePage: React.FC = () => {
                   {strategy.name}
                 </option>
               ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="time_horizon">Time Horizon:</label>
+            <select
+              id="time_horizon"
+              name="time_horizon"
+              value={trade.time_horizon}
+              onChange={handleChange}
+              required
+            >
+              <option value="Short">Short</option>
+              <option value="Mid">Mid</option>
+              <option value="Long">Long</option>
             </select>
           </div>
 
