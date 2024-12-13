@@ -94,8 +94,8 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades, strategies
       <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #ddd", fontSize: "15px" }}>
         <thead>
           <tr>
+            <th>#</th>
             <th>Select</th>
-            <th>ID</th>
             <th>Date</th>
             <th>Ticker</th>
             <th>Strategy</th>
@@ -111,7 +111,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades, strategies
           </tr>
         </thead>
         <tbody>
-          {trades.map((trade) => (
+          {trades.map((trade, index) => (
             <tr
               key={trade.id}
               style={{
@@ -119,6 +119,7 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades, strategies
                 borderBottom: "1px solid #ddd",
               }}
             >
+              <td>{index + 1}</td>
               <td>
                 <input
                   type="checkbox"
@@ -130,7 +131,6 @@ const TradeTable: React.FC<TradeTableProps> = ({ trades, fetchTrades, strategies
                   }}
                 />
               </td>
-              <td>{trade.id}</td>
               <td>{trade.date_of_trade}</td>
               <td>{trade.ticker}</td>
               <td>{getStrategyName(trade.strategy_id)}</td>
