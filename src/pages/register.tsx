@@ -4,6 +4,8 @@ import Link from "next/link"; // Import Link from next/link
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState(""); // State for error messages
+  const [successMessage, setSuccessMessage] = useState(""); // State for success messages
   const router = useRouter(); // Initialize the router
 
   // Define the type for the onChange event
@@ -14,6 +16,9 @@ const Register = () => {
   // Define the type for the onSubmit event
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(""); // Reset error message
+    setSuccessMessage(""); // Reset success message
+
     try {
       const res = await fetch("/api/register", {
         method: "POST",
@@ -22,15 +27,20 @@ const Register = () => {
       });
 
       if (res.ok) {
-        alert("Registration Successful");
+        await res.json(); // Removed unused variable 'data'
+        setSuccessMessage("Registration Successful");
+        setErrorMessage("");
         router.push("/"); // Redirect to the home page
+      } else if (res.status === 400) {
+        const errorData = await res.json();
+        setErrorMessage(errorData.error || "Email is already registered.");
       } else {
         const errorData = await res.json();
-        alert(`Registration Failed: ${errorData.error}`);
+        setErrorMessage(errorData.error || "Registration failed. Please try again.");
       }
     } catch (error) {
       console.error("Registration Error:", error);
-      alert("An unexpected error occurred.");
+      setErrorMessage("An unexpected error occurred. Please try again later.");
     }
   };
 
@@ -81,6 +91,12 @@ const Register = () => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
+          {errorMessage && (
+            <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
+          )}
+          {successMessage && (
+            <p className="text-green-600 text-sm mt-2">{successMessage}</p>
+          )}
           <button
             type="submit"
             className="w-full py-2 px-4 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
